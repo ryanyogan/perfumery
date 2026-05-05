@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { chatStream } from "../server/chat";
 import { useComposerStore } from "../lib/store";
 import { ndjsonStream } from "../lib/ndjson-stream";
 import type { ChatStreamEvent } from "../lib/types";
@@ -26,11 +25,17 @@ export const useChatStream = () => {
         percent: c.percent,
       }));
 
-      const rawStream = await chatStream({ data: { messages, composition } });
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages, composition }),
+      });
 
-      for await (const event of ndjsonStream<ChatStreamEvent>(
-        rawStream as unknown as ReadableStream<Uint8Array>,
-      )) {
+      if (!response.ok || !response.body) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      for await (const event of ndjsonStream<ChatStreamEvent>(response.body)) {
         if (cancelledRef.current) break;
         const s = useComposerStore.getState();
         switch (event.type) {

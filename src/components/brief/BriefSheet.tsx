@@ -304,7 +304,7 @@ function PyramidSection({ pyramid }: { pyramid: NonNullable<BriefDraft["pyramid"
         <tbody>
           {tiers.flatMap(({ key, entries }) =>
             entries
-              .filter((e): e is { compoundId: string; percent: number } => Boolean(e?.compoundId))
+              .filter((e): e is { compoundId: string; percent: number } => Boolean(e?.compoundId) && typeof e?.percent === "number")
               .map((e) => {
                 const c = compoundById(e.compoundId);
                 return (

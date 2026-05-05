@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BriefRefRouteImport } from './routes/brief.$ref'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiBriefRouteImport } from './routes/api/brief'
 
 const LibraryRoute = LibraryRouteImport.update({
   id: '/library',
@@ -28,34 +30,52 @@ const BriefRefRoute = BriefRefRouteImport.update({
   path: '/brief/$ref',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBriefRoute = ApiBriefRouteImport.update({
+  id: '/api/brief',
+  path: '/api/brief',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/api/brief': typeof ApiBriefRoute
+  '/api/chat': typeof ApiChatRoute
   '/brief/$ref': typeof BriefRefRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/api/brief': typeof ApiBriefRoute
+  '/api/chat': typeof ApiChatRoute
   '/brief/$ref': typeof BriefRefRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/library': typeof LibraryRoute
+  '/api/brief': typeof ApiBriefRoute
+  '/api/chat': typeof ApiChatRoute
   '/brief/$ref': typeof BriefRefRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/library' | '/brief/$ref'
+  fullPaths: '/' | '/library' | '/api/brief' | '/api/chat' | '/brief/$ref'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/library' | '/brief/$ref'
-  id: '__root__' | '/' | '/library' | '/brief/$ref'
+  to: '/' | '/library' | '/api/brief' | '/api/chat' | '/brief/$ref'
+  id: '__root__' | '/' | '/library' | '/api/brief' | '/api/chat' | '/brief/$ref'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LibraryRoute: typeof LibraryRoute
+  ApiBriefRoute: typeof ApiBriefRoute
+  ApiChatRoute: typeof ApiChatRoute
   BriefRefRoute: typeof BriefRefRoute
 }
 
@@ -82,12 +102,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BriefRefRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/brief': {
+      id: '/api/brief'
+      path: '/api/brief'
+      fullPath: '/api/brief'
+      preLoaderRoute: typeof ApiBriefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LibraryRoute: LibraryRoute,
+  ApiBriefRoute: ApiBriefRoute,
+  ApiChatRoute: ApiChatRoute,
   BriefRefRoute: BriefRefRoute,
 }
 export const routeTree = rootRouteImport

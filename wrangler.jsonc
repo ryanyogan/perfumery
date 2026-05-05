@@ -8,8 +8,14 @@
     {
       "binding": "DB",
       "database_name": "perfumery",
-      "database_id": "local-dev-placeholder",
+      "database_id": "f2222e9a-ce7d-43c4-846c-8f83e27aafcb",
       "migrations_dir": "drizzle/migrations",
+    },
+  ],
+  "routes": [
+    {
+      "pattern": "belle.yogan.dev",
+      "custom_domain": true,
     },
   ],
   "vars": {
