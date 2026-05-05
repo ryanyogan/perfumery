@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "perfumery",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "perfumery",
+      "database_id": "local-dev-placeholder",
+      "migrations_dir": "drizzle/migrations",
+    },
+  ],
+  "vars": {
+    "DEMO_MODE": "live",
+  },
+}

@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+@import "@fontsource-variable/fraunces/index.css";
+@import "@fontsource-variable/fraunces/wght-italic.css";
+@import "@fontsource/ibm-plex-sans/300.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+@theme {
+  --color-ink: #14110f;
+  --color-ink-2: #1c1916;
+  --color-ink-3: #26221e;
+  --color-paper: #f4efe6;
+  --color-paper-2: #d9d2c5;
+  --color-paper-3: #8e867a;
+  --color-rule: #3a342e;
+
+  --color-amber: #c8923d;
+  --color-amber-2: #e2b26a;
+  --color-amber-glow: #f4d89c;
+
+  --color-note-citrus: #e8c84a;
+  --color-note-floral: #e89bb0;
+  --color-note-green: #8aa876;
+  --color-note-spice: #b85c2e;
+  --color-note-wood: #6b4a2e;
+  --color-note-resin: #8b5a3c;
+  --color-note-musk: #a89884;
+  --color-note-aquatic: #6b98a8;
+  --color-note-gourmand: #c49968;
+  --color-note-animalic: #7c5a4a;
+
+  --font-display: "Fraunces Variable", "PP Editorial Old", Georgia, serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --ease-quiet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+html {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-feature-settings:
+    "ss01" on,
+    "ss02" on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  letter-spacing: 0.01em;
+}
+
+::selection {
+  background-color: var(--color-amber);
+  color: var(--color-ink);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-paper-3);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 1px solid var(--color-amber-glow);
+  outline-offset: 3px;
+}
+
+/* Utility classes referenced from components */
+.font-display {
+  font-family: var(--font-display);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+.font-sans {
+  font-family: var(--font-sans);
+}
+
+.tracking-display {
+  letter-spacing: -0.02em;
+}
+.tracking-caps {
+  letter-spacing: 0.18em;
+}
+.tracking-mono {
+  letter-spacing: 0.02em;
+}
+
+.ease-quiet {
+  transition-timing-function: var(--ease-quiet);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.2s !important;
+  }
+}
+
+/* Dot loader used while assistant is streaming */
+@keyframes dotpulse {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.dot-pulse {
+  display: inline-flex;
+  gap: 4px;
+}
+.dot-pulse > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-amber-glow);
+  animation: dotpulse 1.2s var(--ease-quiet) infinite;
+}
+.dot-pulse > span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.dot-pulse > span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes amber-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-amber-glow) 70%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 8px color-mix(in oklch, var(--color-amber-glow) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklch, var(--color-amber-glow) 0%, transparent);
+  }
+}
+.amber-ping {
+  animation: amber-ping 2.4s var(--ease-quiet) infinite;
+}

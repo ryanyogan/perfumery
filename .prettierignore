@@ -1,0 +1,8 @@
+# oxfmt reads this file when no .oxfmtignore exists
+# Generated/derived files we don't own
+src/routeTree.gen.ts
+worker-configuration.d.ts
+drizzle/migrations/
+node_modules/
+dist/
+.wrangler/
