@@ -3,15 +3,12 @@ import { useComposerStore } from "../../lib/store";
 import { ChatTurn } from "./ChatTurn";
 import { ChatInput } from "./ChatInput";
 import { useChatStream } from "../../hooks/useChatStream";
-import { OFFLINE_SCENARIOS } from "../../lib/offline";
 
 export function ChatPanel() {
   const messages = useComposerStore((s) => s.messages);
   const phase = useComposerStore((s) => s.phase);
   const errorMessage = useComposerStore((s) => s.errorMessage);
   const pendingId = useComposerStore((s) => s.pendingAssistantId);
-  const offlineScenarioId = useComposerStore((s) => s.offlineScenarioId);
-  const offlineTurnIndex = useComposerStore((s) => s.offlineTurnIndex);
 
   const { send, isStreaming } = useChatStream();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -23,17 +20,6 @@ export function ChatPanel() {
   }, [messages.length, pendingId, messages.at(-1)?.content.length]);
 
   const handleSubmit = async (value: string) => {
-    if (offlineScenarioId) {
-      const scenario = OFFLINE_SCENARIOS.find((s) => s.id === offlineScenarioId);
-      const turn = scenario?.turns[offlineTurnIndex];
-      if (turn) {
-        await send(value, {
-          offlineScenario: { id: offlineScenarioId, turnIndex: offlineTurnIndex },
-        });
-        useComposerStore.setState({ offlineTurnIndex: offlineTurnIndex + 1 });
-        return;
-      }
-    }
     await send(value);
   };
 
@@ -52,9 +38,9 @@ export function ChatPanel() {
               Tell me what you want it to feel like.
             </p>
             <p className="max-w-[44ch] font-sans text-[14px] leading-relaxed text-[var(--color-paper-2)]">
-              I'm M. Beaumont. Describe a feeling, a memory, or a target consumer in plain
-              language — I'll compose a fragrance on the organ and walk you through the choices.
-              Or click vials directly to compose by hand.
+              I'm M. Beaumont. Describe a feeling, a memory, or a target consumer in plain language
+              — I'll compose a fragrance on the organ and walk you through the choices. Or click
+              vials directly to compose by hand.
             </p>
           </div>
         )}

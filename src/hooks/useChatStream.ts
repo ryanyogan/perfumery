@@ -1,19 +1,14 @@
 import { useCallback, useRef, useState } from "react";
 import { chatStream } from "../server/chat";
 import { useComposerStore } from "../lib/store";
-
-export interface SendOptions {
-  offlineScenario?: {
-    id: "storm" | "library" | "belle-aire-candle";
-    turnIndex: number;
-  };
-}
+import { ndjsonStream } from "../lib/ndjson-stream";
+import type { ChatStreamEvent } from "../lib/types";
 
 export const useChatStream = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const cancelledRef = useRef(false);
 
-  const send = useCallback(async (content: string, opts?: SendOptions) => {
+  const send = useCallback(async (content: string) => {
     const store = useComposerStore.getState();
     store.setError(null);
     store.appendUserMessage(content);
@@ -31,15 +26,11 @@ export const useChatStream = () => {
         percent: c.percent,
       }));
 
-      const stream = await chatStream({
-        data: {
-          messages,
-          composition,
-          offlineScenario: opts?.offlineScenario,
-        },
-      });
+      const rawStream = await chatStream({ data: { messages, composition } });
 
-      for await (const event of stream) {
+      for await (const event of ndjsonStream<ChatStreamEvent>(
+        rawStream as unknown as ReadableStream<Uint8Array>,
+      )) {
         if (cancelledRef.current) break;
         const s = useComposerStore.getState();
         switch (event.type) {
@@ -50,13 +41,11 @@ export const useChatStream = () => {
             s.appendAssistantDelta(event.messageId, event.delta);
             break;
           case "tool-input-delta":
-            // No-op for now; could show a "thinking" indicator
             break;
           case "tool-result":
             s.attachProposal(event.messageId, event.input);
             s.applyProposal(event.input);
             s.highlightOnly(event.input.add.map((a) => a.compoundId));
-            // Clear highlight after a beat
             setTimeout(() => useComposerStore.getState().clearHighlight(), 4500);
             break;
           case "message-finish":

@@ -8,19 +8,12 @@ import { BriefSheet } from "../components/brief/BriefSheet";
 import { useChatStream } from "../hooks/useChatStream";
 import { useBriefStream } from "../hooks/useBriefStream";
 import { useComposerStore } from "../lib/store";
-import { getRuntimeInfo } from "../server/runtime";
 
 export const Route = createFileRoute("/")({
   component: Composer,
-  loader: async ({ context }) =>
-    context.queryClient.ensureQueryData({
-      queryKey: ["runtime-info"],
-      queryFn: () => getRuntimeInfo(),
-    }),
 });
 
 function Composer() {
-  const data = Route.useLoaderData();
   const phase = useComposerStore((s) => s.phase);
   const briefStatus = useComposerStore((s) => s.briefStatus);
   const reset = useComposerStore((s) => s.reset);
@@ -34,13 +27,12 @@ function Composer() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isOffline = data?.demoMode === "offline";
   const showBrief =
     phase === "BRIEF_PENDING" || phase === "BRIEF_OPEN" || briefStatus === "streaming";
 
   return (
     <div className="grid h-dvh grid-rows-[48px_1fr_auto]">
-      <TopBar isOffline={isOffline} />
+      <TopBar />
       <main className="relative grid grid-cols-[62%_38%] overflow-hidden border-y border-[var(--color-rule)]">
         <section
           className="min-h-0 overflow-hidden border-r border-[var(--color-rule)] bg-[var(--color-ink)]"

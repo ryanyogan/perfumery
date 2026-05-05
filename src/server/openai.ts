@@ -15,11 +15,6 @@ export const getOpenAI = () => {
   return cached;
 };
 
-export const isOfflineMode = (): boolean => {
-  const mode = (env as unknown as { DEMO_MODE?: string }).DEMO_MODE;
-  return mode === "offline";
-};
-
 export const MODEL_CHAT = "gpt-5-mini";
 export const MODEL_BRIEF = "gpt-5";
 export const MODEL_CRITIQUE = "gpt-5-mini";

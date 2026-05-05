@@ -2,17 +2,12 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { TopBar } from "../components/chrome/TopBar";
 import { getBrief } from "../server/briefs";
-import { getRuntimeInfo } from "../server/runtime";
 import { compoundById } from "../lib/compounds";
 import { ROLE_LABEL } from "../lib/families";
 
 export const Route = createFileRoute("/brief/$ref")({
   component: BriefDetail,
   loader: async ({ context, params }) => {
-    await context.queryClient.ensureQueryData({
-      queryKey: ["runtime-info"],
-      queryFn: () => getRuntimeInfo(),
-    });
     const brief = await context.queryClient.ensureQueryData({
       queryKey: ["brief", params.ref],
       queryFn: () => getBrief({ data: { ref: params.ref } }),
@@ -25,10 +20,6 @@ export const Route = createFileRoute("/brief/$ref")({
 
 function BriefDetail() {
   const { ref } = Route.useParams();
-  const { data: runtime } = useSuspenseQuery({
-    queryKey: ["runtime-info"],
-    queryFn: () => getRuntimeInfo(),
-  });
   const { data: result } = useSuspenseQuery({
     queryKey: ["brief", ref],
     queryFn: () => getBrief({ data: { ref } }),
@@ -43,7 +34,7 @@ function BriefDetail() {
 
   return (
     <div className="grid min-h-dvh grid-rows-[48px_1fr]">
-      <TopBar isOffline={runtime.demoMode === "offline"} />
+      <TopBar />
       <main className="overflow-y-auto px-8 py-12">
         <div className="mx-auto max-w-[640px]">
           <header className="flex items-baseline justify-between border-b border-[var(--color-rule)] pb-2 font-mono text-[10px] tracking-caps text-[var(--color-paper-3)] uppercase">

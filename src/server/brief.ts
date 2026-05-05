@@ -8,9 +8,9 @@ import {
   buildCompositionBlock,
 } from "../lib/prompts";
 import { briefSchema, critiqueSchema, type Critique, type BriefDraft } from "../lib/brief-schema";
-import { getOpenAI, MODEL_BRIEF, MODEL_CRITIQUE, isOfflineMode } from "./openai";
-import { OFFLINE_SCENARIOS } from "../lib/offline";
+import { getOpenAI, MODEL_BRIEF, MODEL_CRITIQUE } from "./openai";
 import { generateRef } from "../lib/ref";
+import { RawStream } from "@tanstack/router-core";
 
 const briefInputSchema = z.object({
   messages: z.array(
@@ -26,107 +26,82 @@ const briefInputSchema = z.object({
       role: z.enum(["top", "heart", "base"]),
     }),
   ),
-  offlineScenario: z.enum(["storm", "library", "belle-aire-candle"]).optional(),
 });
+
+type BriefStreamEvent =
+  | { type: "partial"; brief: Partial<BriefDraft> }
+  | { type: "finished"; brief: BriefDraft; reference: string }
+  | { type: "error"; message: string };
 
 export const generateBrief = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => briefInputSchema.parse(data))
-  .handler(async function* ({
-    data,
-  }): AsyncGenerator<
-    | { type: "partial"; brief: Partial<BriefDraft> }
-    | { type: "finished"; brief: BriefDraft; reference: string }
-    | { type: "error"; message: string }
-  > {
-    if (isOfflineMode() && data.offlineScenario) {
-      const scenario = OFFLINE_SCENARIOS.find((s) => s.id === data.offlineScenario);
-      if (!scenario) {
-        yield { type: "error", message: "Unknown scenario." };
-        return;
-      }
-      // Fake-stream the offline brief section by section for visual effect
-      const partial: Partial<BriefDraft> = {};
-      const sections: (keyof BriefDraft)[] = [
-        "name",
-        "tagline",
-        "application",
-        "recommendedConcentration",
-        "targetConsumer",
-        "occasion",
-        "pyramid",
-        "story",
-        "marketingCopy",
-        "safetyProfile",
-        "perfumerNotes",
-      ];
-      for (const key of sections) {
-        // @ts-expect-error sequenced assignment is fine here
-        partial[key] = scenario.brief[key];
-        yield { type: "partial", brief: { ...partial } };
-        await new Promise((r) => setTimeout(r, 220));
-      }
-      yield { type: "finished", brief: scenario.brief, reference: generateRef() };
-      return;
-    }
+  .handler(({ data }): ReadableStream<Uint8Array> => {
+    const encoder = new TextEncoder();
 
-    let openai;
-    try {
-      openai = getOpenAI();
-    } catch (err) {
-      yield {
-        type: "error",
-        message: err instanceof Error ? err.message : "OpenAI is not configured.",
-      };
-      return;
-    }
+    const nativeStream = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        const emit = (event: BriefStreamEvent) => {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        };
 
-    const paletteBlock = buildPaletteBlock();
-    const compositionBlock = buildCompositionBlock(data.composition);
+        let openai;
+        try {
+          openai = getOpenAI();
+        } catch (err) {
+          emit({
+            type: "error",
+            message: err instanceof Error ? err.message : "OpenAI is not configured.",
+          });
+          controller.close();
+          return;
+        }
 
-    try {
-      const result = streamObject({
-        model: openai(MODEL_BRIEF),
-        system: BRIEF_SYSTEM_PROMPT,
-        schema: briefSchema,
-        messages: [
-          {
-            role: "user",
-            content: `${paletteBlock}\n\n${compositionBlock}\n\nCONVERSATION:\n${data.messages
-              .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-              .join("\n")}\n\nGenerate the partner-ready brief.`,
-          },
-        ],
-      });
+        const paletteBlock = buildPaletteBlock();
+        const compositionBlock = buildCompositionBlock(data.composition);
 
-      for await (const partial of result.partialObjectStream) {
-        yield { type: "partial", brief: partial as Partial<BriefDraft> };
-      }
+        try {
+          const result = streamObject({
+            model: openai(MODEL_BRIEF),
+            system: BRIEF_SYSTEM_PROMPT,
+            schema: briefSchema,
+            messages: [
+              {
+                role: "user",
+                content: `${paletteBlock}\n\n${compositionBlock}\n\nCONVERSATION:\n${data.messages
+                  .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+                  .join("\n")}\n\nGenerate the partner-ready brief.`,
+              },
+            ],
+          });
 
-      const final = await result.object;
-      yield { type: "finished", brief: final, reference: generateRef() };
-    } catch (err) {
-      yield {
-        type: "error",
-        message: err instanceof Error ? err.message : "Brief generation failed.",
-      };
-    }
+          for await (const partial of result.partialObjectStream) {
+            emit({ type: "partial", brief: partial as Partial<BriefDraft> });
+          }
+
+          const final = await result.object;
+          emit({ type: "finished", brief: final, reference: generateRef() });
+        } catch (err) {
+          emit({
+            type: "error",
+            message: err instanceof Error ? err.message : "Brief generation failed.",
+          });
+        }
+
+        controller.close();
+      },
+    });
+
+    return new RawStream(nativeStream) as unknown as ReadableStream<Uint8Array>;
   });
 
 const critiqueInputSchema = z.object({
   brief: briefSchema,
   conversationSummary: z.string(),
-  offlineScenario: z.enum(["storm", "library", "belle-aire-candle"]).optional(),
 });
 
 export const critiqueBrief = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => critiqueInputSchema.parse(data))
   .handler(async ({ data }): Promise<{ critique: Critique } | { error: string }> => {
-    if (isOfflineMode() && data.offlineScenario) {
-      const scenario = OFFLINE_SCENARIOS.find((s) => s.id === data.offlineScenario);
-      if (!scenario) return { error: "Unknown scenario." };
-      return { critique: scenario.critique };
-    }
-
     let openai;
     try {
       openai = getOpenAI();

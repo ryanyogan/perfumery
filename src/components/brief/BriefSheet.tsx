@@ -12,7 +12,6 @@ export function BriefSheet() {
   const status = useComposerStore((s) => s.briefStatus);
   const critique = useComposerStore((s) => s.critique);
   const critiqueStatus = useComposerStore((s) => s.critiqueStatus);
-  const offlineScenarioId = useComposerStore((s) => s.offlineScenarioId);
   const messages = useComposerStore((s) => s.messages);
   const [savedRef, setSavedRef] = useState<string | null>(null);
   const [savingState, setSavingState] = useState<"idle" | "saving" | "transmitted" | "error">(
@@ -34,7 +33,6 @@ export function BriefSheet() {
         data: {
           brief: draft as BriefDraft,
           conversationSummary,
-          offlineScenario: offlineScenarioId ?? undefined,
         },
       });
       if ("critique" in result) {

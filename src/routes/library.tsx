@@ -2,30 +2,19 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { TopBar } from "../components/chrome/TopBar";
 import { listBriefs } from "../server/briefs";
-import { getRuntimeInfo } from "../server/runtime";
 
 export const Route = createFileRoute("/library")({
   component: LibraryPage,
   loader: async ({ context }) => {
-    await Promise.all([
-      context.queryClient.ensureQueryData({
-        queryKey: ["briefs"],
-        queryFn: () => listBriefs(),
-      }),
-      context.queryClient.ensureQueryData({
-        queryKey: ["runtime-info"],
-        queryFn: () => getRuntimeInfo(),
-      }),
-    ]);
+    await context.queryClient.ensureQueryData({
+      queryKey: ["briefs"],
+      queryFn: () => listBriefs(),
+    });
   },
   errorComponent: LibraryError,
 });
 
 function LibraryPage() {
-  const { data: runtime } = useSuspenseQuery({
-    queryKey: ["runtime-info"],
-    queryFn: () => getRuntimeInfo(),
-  });
   const { data: briefs } = useSuspenseQuery({
     queryKey: ["briefs"],
     queryFn: () => listBriefs(),
@@ -33,7 +22,7 @@ function LibraryPage() {
 
   return (
     <div className="grid min-h-dvh grid-rows-[48px_1fr]">
-      <TopBar isOffline={runtime.demoMode === "offline"} />
+      <TopBar />
       <main className="overflow-y-auto px-12 py-12">
         <header className="mb-12 max-w-[640px]">
           <p className="font-mono text-[10px] tracking-caps text-[var(--color-paper-3)] uppercase">

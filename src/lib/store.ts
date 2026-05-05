@@ -21,10 +21,6 @@ interface ComposerState {
   critique: Critique | null;
   critiqueStatus: "idle" | "pending" | "ready";
 
-  // Demo
-  offlineScenarioId: "storm" | "library" | "belle-aire-candle" | null;
-  offlineTurnIndex: number;
-
   // Actions
   setPhase: (phase: Phase) => void;
   appendUserMessage: (content: string) => string;
@@ -46,9 +42,6 @@ interface ComposerState {
   setCritique: (c: Critique | null) => void;
   setCritiqueStatus: (s: ComposerState["critiqueStatus"]) => void;
   markTransmitted: () => void;
-
-  // Offline
-  setOfflineScenario: (id: "storm" | "library" | "belle-aire-candle" | null) => void;
 }
 
 const initialState = (): Pick<
@@ -64,8 +57,6 @@ const initialState = (): Pick<
   | "briefStatus"
   | "critique"
   | "critiqueStatus"
-  | "offlineScenarioId"
-  | "offlineTurnIndex"
 > => ({
   phase: "INITIAL",
   messages: [],
@@ -78,8 +69,6 @@ const initialState = (): Pick<
   briefStatus: "idle",
   critique: null,
   critiqueStatus: "idle",
-  offlineScenarioId: null,
-  offlineTurnIndex: 0,
 });
 
 export const useComposerStore = create<ComposerState>((set, get) => ({
@@ -151,10 +140,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
       const c = compoundById(compoundId);
       if (!c) return;
       set({
-        composition: [
-          ...composition,
-          { compoundId, percent: c.defaultPercent, role: c.role },
-        ],
+        composition: [...composition, { compoundId, percent: c.defaultPercent, role: c.role }],
       });
     }
     // Auto-promote phase if user is composing manually before chatting
@@ -178,6 +164,4 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   setCritique: (c) => set({ critique: c }),
   setCritiqueStatus: (s) => set({ critiqueStatus: s }),
   markTransmitted: () => set({ briefStatus: "transmitted" }),
-
-  setOfflineScenario: (id) => set({ offlineScenarioId: id, offlineTurnIndex: 0 }),
 }));

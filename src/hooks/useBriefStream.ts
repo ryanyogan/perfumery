@@ -1,6 +1,13 @@
 import { useCallback, useState } from "react";
 import { generateBrief } from "../server/brief";
 import { useComposerStore } from "../lib/store";
+import { ndjsonStream } from "../lib/ndjson-stream";
+import type { BriefDraft } from "../lib/brief-schema";
+
+type BriefStreamEvent =
+  | { type: "partial"; brief: Partial<BriefDraft> }
+  | { type: "finished"; brief: BriefDraft; reference: string }
+  | { type: "error"; message: string };
 
 export const useBriefStream = () => {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -20,15 +27,11 @@ export const useBriefStream = () => {
     setIsStreaming(true);
 
     try {
-      const stream = await generateBrief({
-        data: {
-          messages,
-          composition,
-          offlineScenario: store.offlineScenarioId ?? undefined,
-        },
-      });
+      const rawStream = await generateBrief({ data: { messages, composition } });
 
-      for await (const event of stream) {
+      for await (const event of ndjsonStream<BriefStreamEvent>(
+        rawStream as unknown as ReadableStream<Uint8Array>,
+      )) {
         const s = useComposerStore.getState();
         if (event.type === "partial") {
           s.patchBrief(event.brief);
